@@ -100,7 +100,7 @@ spec:
                             container(name: 'kaniko', shell: '/busybox/sh') {
                                 sh '''#!/busybox/sh
                                     VERSION=$(grep '"version":' ./backend/package.json | head -1 | awk -F: '{ print $2 }' | sed 's/[", ]//g')
-                                    /kaniko/executor --context `pwd`/frontend --dockerfile=Dockerfile --insecure --skip-tls-verify --insecure-registry 4.231.77.212 --skip-tls-verify-registry 4.231.77.212 --destination=4.231.77.212/docker-local/frontend:$VERSION-$BUILD_NUMBER --image-name-with-digest-file=frontend-image-file
+                                    /kaniko/executor --context `pwd`/frontend --dockerfile=Dockerfile --destination=feanor94/frontend:$VERSION-$BUILD_NUMBER --image-name-with-digest-file=frontend-image-file
                                 '''
                             }
                         }
@@ -113,30 +113,12 @@ spec:
                             container(name: 'kaniko', shell: '/busybox/sh') {
                                 sh '''#!/busybox/sh
                                     VERSION=$(grep '"version":' ./backend/package.json | head -1 | awk -F: '{ print $2 }' | sed 's/[", ]//g')
-                                    /kaniko/executor --context `pwd`/backend --dockerfile=Dockerfile --insecure --skip-tls-verify --insecure-registry 4.231.77.212 --skip-tls-verify-registry 4.231.77.212 --destination=4.231.77.212/docker-local/backend:$VERSION-$BUILD_NUMBER --image-name-with-digest-file=backend-image-file
+                                    /kaniko/executor --context `pwd`/backend --dockerfile=Dockerfile --destination=feanor94/backend:$VERSION-$BUILD_NUMBER --image-name-with-digest-file=backend-image-file
                                 '''
                             }
                         }
                     }
                 }
-            }
-        }
-
-        stage('Publish build info') {
-            steps {
-                rtCreateDockerBuild (
-                    serverId: 'Default Artifactory Server',
-                    sourceRepo: 'docker-local',
-                    kanikoImageFile: "frontend-image-file"
-                )
-                rtCreateDockerBuild (
-                    serverId: 'Default Artifactory Server',
-                    sourceRepo: 'docker-local',
-                    kanikoImageFile: "backend-image-file"
-                )
-                rtPublishBuildInfo (
-                    serverId: 'Default Artifactory Server'
-                )
             }
         } 
     }
