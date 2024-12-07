@@ -51,12 +51,14 @@ spec:
     stages {
         stage('Unit testing') {
             steps {
-                container('node') {
-                    sh '''
-                        cd ./backend/
-                        npm install
-                        npm run test
-                    '''
+                dir('.chapter-9/hello-world') {
+                    container('node') {
+                        sh '''
+                            cd ./backend/
+                            npm install
+                            npm run test
+                        '''
+                    }
                 }
             }
         }
