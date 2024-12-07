@@ -51,7 +51,7 @@ spec:
     stages {
         stage('Unit testing') {
             steps {
-                dir('.chapter-9/hello-world') {
+                dir('./chapter-9/hello-world') {
                     container('node') {
                         sh '''
                             cd ./backend/
@@ -65,18 +65,20 @@ spec:
 
         stage('SonarQube analysis') {
             steps {
-                container('sonar-scanner-cli') {
-                    withSonarQubeEnv('Default SonarQube Server') {
-                        sh """
-                            sonar-scanner \
-                            -Dsonar.projectKey=Hello-World \
-                            -Dsonar.sources=backend/,frontend/,database-init/ \
-                            -Dsonar.exclusions=test-output/  \
-                            -Dsonar.tests=unit-tests/ \
-                            -Dsonar.host.url=${env.SONAR_HOST_URL} \
-                            -Dsonar.login=${env.SONAR_AUTH_TOKEN} \
-                            -Dsonar.javascript.lcov.reportPaths=./test-output/coverage/lcov.info
-                        """
+                dir('./chapter-9/hello-world') {
+                    container('sonar-scanner-cli') {
+                        withSonarQubeEnv('Default SonarQube Server') {
+                            sh """
+                                sonar-scanner \
+                                -Dsonar.projectKey=Hello-World \
+                                -Dsonar.sources=backend/,frontend/,database-init/ \
+                                -Dsonar.exclusions=test-output/  \
+                                -Dsonar.tests=unit-tests/ \
+                                -Dsonar.host.url=${env.SONAR_HOST_URL} \
+                                -Dsonar.login=${env.SONAR_AUTH_TOKEN} \
+                                -Dsonar.javascript.lcov.reportPaths=./test-output/coverage/lcov.info
+                            """
+                        }
                     }
                 }
             }
@@ -94,22 +96,26 @@ spec:
             parallel {
                 stage('Frontend') {
                     steps {
-                        container(name: 'kaniko', shell: '/busybox/sh') {
-                            sh '''#!/busybox/sh
-                                VERSION=$(grep '"version":' ./backend/package.json | head -1 | awk -F: '{ print $2 }' | sed 's/[", ]//g')
-                                /kaniko/executor --context `pwd`/frontend --dockerfile=Dockerfile --insecure --skip-tls-verify --insecure-registry 4.231.77.212 --skip-tls-verify-registry 4.231.77.212 --destination=4.231.77.212/docker-local/frontend:$VERSION-$BUILD_NUMBER --image-name-with-digest-file=frontend-image-file
-                            '''
+                        dir('./chapter-9/hello-world') {
+                            container(name: 'kaniko', shell: '/busybox/sh') {
+                                sh '''#!/busybox/sh
+                                    VERSION=$(grep '"version":' ./backend/package.json | head -1 | awk -F: '{ print $2 }' | sed 's/[", ]//g')
+                                    /kaniko/executor --context `pwd`/frontend --dockerfile=Dockerfile --insecure --skip-tls-verify --insecure-registry 4.231.77.212 --skip-tls-verify-registry 4.231.77.212 --destination=4.231.77.212/docker-local/frontend:$VERSION-$BUILD_NUMBER --image-name-with-digest-file=frontend-image-file
+                                '''
+                            }
                         }
                     }
                 }
 
                 stage('Backend') {
                     steps {
-                        container(name: 'kaniko', shell: '/busybox/sh') {
-                            sh '''#!/busybox/sh
-                                VERSION=$(grep '"version":' ./backend/package.json | head -1 | awk -F: '{ print $2 }' | sed 's/[", ]//g')
-                                /kaniko/executor --context `pwd`/backend --dockerfile=Dockerfile --insecure --skip-tls-verify --insecure-registry 4.231.77.212 --skip-tls-verify-registry 4.231.77.212 --destination=4.231.77.212/docker-local/backend:$VERSION-$BUILD_NUMBER --image-name-with-digest-file=backend-image-file
-                            '''
+                        dir('./chapter-9/hello-world') {
+                            container(name: 'kaniko', shell: '/busybox/sh') {
+                                sh '''#!/busybox/sh
+                                    VERSION=$(grep '"version":' ./backend/package.json | head -1 | awk -F: '{ print $2 }' | sed 's/[", ]//g')
+                                    /kaniko/executor --context `pwd`/backend --dockerfile=Dockerfile --insecure --skip-tls-verify --insecure-registry 4.231.77.212 --skip-tls-verify-registry 4.231.77.212 --destination=4.231.77.212/docker-local/backend:$VERSION-$BUILD_NUMBER --image-name-with-digest-file=backend-image-file
+                                '''
+                            }
                         }
                     }
                 }
